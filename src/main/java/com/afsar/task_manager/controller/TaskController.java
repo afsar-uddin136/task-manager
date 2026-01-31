@@ -2,7 +2,10 @@ package com.afsar.task_manager.controller;
 
 import com.afsar.task_manager.entity.Task;
 import com.afsar.task_manager.service.TaskService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -15,38 +18,49 @@ public class TaskController {
     private TaskService taskService;
 
     @GetMapping
-    public List<Task> getAllTask(){
-        return taskService.findAllTask();
+    public ResponseEntity<?> getAllTask(){
+        List<Task> allTask = taskService.findAllTask();
+        if(allTask != null && !allTask.isEmpty()){
+            return new ResponseEntity<>(allTask, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PostMapping
-    public boolean createTask(@RequestBody Task task){
+    public ResponseEntity<?> createTask(@RequestBody Task task){
         taskService.saveTask(task);
-        return true;
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping("/id/{id}")
-    public Task getTaskById(@PathVariable String id){
-        return taskService.findTaskById(id).orElse(null);
+    public ResponseEntity<?> getTaskById(@PathVariable ObjectId id){
+        Task task = taskService.findTaskById(id).orElse(null);
+        if(task != null){
+            return new ResponseEntity<>(task,HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/id/{id}")
-    public boolean deleteTaskById(@PathVariable String id){
-        taskService.deleteTaskById(id);
-        return true;
+    public ResponseEntity<?> deleteTaskById(@PathVariable ObjectId id){
+        boolean removed = taskService.deleteTaskById(id);
+        if(removed){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/id/{id}")
-    public Task updateTaskById(@RequestBody Task newTask,@PathVariable String id){
+    public ResponseEntity<?> updateTaskById(@RequestBody Task newTask,@PathVariable ObjectId id){
         Task old = taskService.findTaskById(id).orElse(null);
         if(old != null){
             old.setTitle(newTask.getTitle()!=null && !newTask.getTitle().isEmpty() ? newTask.getTitle() : old.getTitle());
             old.setDescription(newTask.getDescription()!=null && !newTask.getDescription().isEmpty()? newTask.getDescription() : old.getDescription());
             old.setCompleted(newTask.isCompleted());
             taskService.saveTask(old);
-            return old;
+            return new ResponseEntity<>(old,HttpStatus.OK);
         }
-        return null;
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 
