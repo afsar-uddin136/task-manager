@@ -28,6 +28,9 @@ public class TaskService {
         userService.saveUser(user);
 
     }
+    public void saveNewTask(Task task){
+        taskRepository.save(task);
+    }
 
     public List<Task> findAllTask(){
         return taskRepository.findAll();
